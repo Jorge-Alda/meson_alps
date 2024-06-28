@@ -20,6 +20,7 @@ mBs = Particle.from_name('B(s)0').mass/1000
 mK = Particle.from_name('K+').mass/1000
 mKL = Particle.from_name('K(L)0').mass/1000
 mKS = Particle.from_name('K(S)0').mass/1000
+mKst0 = Particle.from_name('K*(892)0').mass/1000
 
 mq_dict = {'u': mu, 'd': md, 's': ms, 'c': mc, 'b': mb, 't': mt}
 

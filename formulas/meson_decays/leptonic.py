@@ -1,7 +1,7 @@
-from .couplings import gq_eff, gSM, cll_eff
-from .common import *
-from .constants import *
-from .alp_decays import Gamma_a_tot
+from ..couplings import gq_eff, gSM, cll_eff
+from ..common import *
+from ..constants import *
+from ..alp_decays import Gamma_a_tot
 
 
 def BR_B0_quad(ma, mlep, couplings, f_a=1000):
@@ -40,3 +40,4 @@ def BR_KL_int(ma, mlep, couplings, f_a=1000):
 
 def BR_KL(ma, mlep, couplings, f_a=1000):
     return BR_KL_quad(ma, mlep, couplings, f_a=1000) + BR_KL_int(ma, mlep, couplings, f_a=1000)
+

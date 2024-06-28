@@ -3,7 +3,7 @@ import numpy as np
 from scipy.interpolate import interp1d, SmoothBivariateSpline
 import os
 dirname = os.path.dirname(__file__)
-from .meson_leptonic import BR_Bs_int, BR_Bs_quad
+from .meson_decays.leptonic import BR_Bs_int, BR_Bs_quad
 from .constants import *
 from .alp_decays import Gamma_a_tot
 import flavio
