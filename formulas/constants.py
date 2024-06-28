@@ -43,3 +43,5 @@ s2w = pars['s2w']
 # GF = sqrt(2)/8 g^2/mW^2
 g2 = (GF*mW**2*8/2**0.5)**0.5
 C10_SM = flavio.physics.bdecays.wilsoncoefficients.wcsm_nf5(4.18)[9]
+
+hbar_GeVps = 6.582e-13
