@@ -29,7 +29,7 @@ def BR_BKmumu(ma, couplings, f_a=1000):
     return BR_BKa(ma, couplings, f_a=1000) * BR_amu(ma, couplings, f_a=1000)
 BR_BKmumu.tex = r'$\mathrm{BR}(B^\pm\to K^\pm \mu^+\mu^-)$'
 BR_BKmumu.process_tex = r'$B^\pm\to K^\pm \mu^+\mu^-$'
-BR_BKmumu.min_ma = 0
+BR_BKmumu.min_ma = 2*mmu
 BR_BKmumu.max_ma = mB - mK - 2*mmu
 
 def BR_B0Kstmumu(ma, couplings, f_a=1000):
@@ -38,3 +38,14 @@ BR_B0Kstmumu.tex = r'$\mathrm{BR}(B^0\to K^{*0} \mu^+\mu^-)$'
 BR_B0Kstmumu.process_tex = r'$B^0\to K^{*0} \mu^+\mu^-$'
 BR_B0Kstmumu.min_ma = 2*mmu
 BR_B0Kstmumu.max_ma = mB0 - mKst0 - 2* mmu
+
+def BR_BKmumu_offshell(ma, couplings, q2min, q2max, f_a=1000):
+    if ma**2 > q2min and ma**2 < q2max:
+        return BR_BKmumu(ma, couplings, f_a)
+    integrand = lambda q2: q2*np.sqrt(1-4*mmu**2/q2)*np.sqrt(kallen(mB**2, mK**2, q2))/np.abs(q2-ma**2)**2*f0_BK(q2)**2
+    integral = quad(integrand, q2min, q2max)[0]
+    return integral*np.abs(gq_eff('bs', couplings, f_a) * cll_eff(mmu, couplings, f_a=1000))**2*mmu**2/f_a**2*(mB**2-mK**2)**2/((2*np.pi)**3*32*mB**3*GammaB)
+BR_BKmumu_offshell.tex = r'$\mathrm{BR}(B^\pm\to K^\pm \mu^+\mu^-)$'
+BR_BKmumu_offshell.process_tex = r'$B^\pm\to K^\pm \mu^+\mu^-$'
+BR_BKmumu_offshell.min_ma = 0
+BR_BKmumu_offshell.max_ma = np.inf
