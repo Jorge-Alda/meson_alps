@@ -17,7 +17,8 @@ B1 = lambda x: 1-x*floop(x)**2
 B2 = lambda x: 1-(x-1)*floop(x)**2
 
 
-alpha_em = lambda q2: flavio.physics.running.running.get_alpha_e(pars, q2**0.5)
+alpha_em = lambda q: flavio.physics.running.running.get_alpha_e(pars, q)
+alpha_s = lambda q: flavio.physics.running.running.get_alpha_s(pars, q)
 
 f0_BK = lambda q2: flavio.physics.bdecays.formfactors.b_p.bcl.ff('B->K', q2, pars)['f0']
 f0_Kpi = lambda q2: flavio.physics.kdecays.formfactors.fp0_dispersive(q2, pars)['f0']
