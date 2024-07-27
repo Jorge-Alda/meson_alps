@@ -21,6 +21,7 @@ from . import ALPcouplings
 import wilson
 from typing import Callable
 from scipy.integrate import solve_ivp
+import vegas
 
 
 def gauge_tilde(couplings: ALPcouplings) -> dict:
@@ -39,9 +40,9 @@ def gauge_tilde(couplings: ALPcouplings) -> dict:
         Dictionary containing `cgtilde`, `cBtilde` and `cWtilde`
     """
     couplings = couplings.translate('derivative_above')
-    cg = couplings.values['cg'] - 0.5 *np.trace(2*couplings.values['cqL']-couplings.values['cuR']-couplings.values['cdR'])
-    cW = couplings.values['cW'] - 0.5*np.trace(3*couplings.values['cqL']+ couplings.values['clL'])
-    cB = couplings.values['cB']-np.trace(couplings.values['cqL']-8*couplings.values['cuR']-2*couplings.values['cdR']+3*couplings.values['clL']-6*couplings.values['ceR'])/6
+    cg = couplings['cg'] - 0.5 *np.trace(2*couplings['cqL']-couplings['cuR']-couplings['cdR'])
+    cW = couplings['cW'] - 0.5*np.trace(3*couplings['cqL']+ couplings['clL'])
+    cB = couplings['cB']+np.trace(4/3*couplings['cuR']+1/3*couplings['cdR']-1/6*couplings['cqL']+couplings['ceR']-1/2*couplings['clL'])
     return {'cgtilde': cg, 'cBtilde':cB, 'cWtilde': cW}
 
 
@@ -102,30 +103,30 @@ def beta_ytop(couplings: ALPcouplings) -> ALPcouplings:
 
     # eq(25)
     couplings = couplings.translate('derivative_above')
-    ctt = couplings.values['cuR'][2,2]-couplings.values['cqL'][2,2]
+    ctt = couplings['cuR'][2,2]-couplings['cqL'][2,2]
 
     # eq(24)
     diag_betaqL = -2*ytop**2*np.matrix(np.diag([0,0,1]) + 3*bQ*np.eye(3))*ctt +np.eye(3)*(-16*alpha_s**2*tildes['cgtilde'] - 9*alpha_2**2*tildes['cWtilde'] - 1/3*alpha_1**2*tildes['cBtilde'])
     offdiag_betaqL = np.matrix(np.zeros([3,3]))
-    offdiag_betaqL[0,2] = couplings.values['cqL'][0,2]
-    offdiag_betaqL[1,2] = couplings.values['cqL'][1,2]
-    offdiag_betaqL[2,0] = couplings.values['cqL'][2,0]
-    offdiag_betaqL[2,1] = couplings.values['cqL'][2,1]
+    offdiag_betaqL[0,2] = couplings['cqL'][0,2]
+    offdiag_betaqL[1,2] = couplings['cqL'][1,2]
+    offdiag_betaqL[2,0] = couplings['cqL'][2,0]
+    offdiag_betaqL[2,1] = couplings['cqL'][2,1]
     betaqL = diag_betaqL + ytop**2/2 * offdiag_betaqL
 
     diag_betauR = 2*ytop**2*np.matrix(np.diag([0,0,1])-3*bu*np.eye(3))*ctt + np.eye(3)*(16*alpha_s**2*tildes['cgtilde']+16/3*alpha_1**2*tildes['cBtilde'])
     offdiag_betauR = np.matrix(np.zeros([3,3]))
-    offdiag_betauR[0,2] = couplings.values['cuR'][0,2]
-    offdiag_betauR[1,2] = couplings.values['cuR'][1,2]
-    offdiag_betauR[2,0] = couplings.values['cuR'][2,0]
-    offdiag_betauR[2,1] = couplings.values['cuR'][2,1]
+    offdiag_betauR[0,2] = couplings['cuR'][0,2]
+    offdiag_betauR[1,2] = couplings['cuR'][1,2]
+    offdiag_betauR[2,0] = couplings['cuR'][2,0]
+    offdiag_betauR[2,1] = couplings['cuR'][2,1]
     betauR = diag_betauR + ytop**2*offdiag_betauR
 
     betadR = np.eye(3)*(-6*ytop**2*bd*ctt + 16*alpha_s**2*tildes['cgtilde']+16/12*alpha_1**2*tildes['cBtilde'])
 
     betalL = np.eye(3)*(-6*ytop**2*bL*ctt-9*alpha_2**2*tildes['cWtilde']-3*alpha_1**2*tildes['cBtilde'])
 
-    betaeR = np.eye(3)*(-16*ytop**2*be*ctt+12*alpha_1**2*tildes['cBtilde'])
+    betaeR = np.eye(3)*(-6*ytop**2*be*ctt+12*alpha_1**2*tildes['cBtilde'])
 
     return ALPcouplings({'cqL': betaqL, 'cuR': betauR, 'cdR': betadR, 'clL': betalL, 'ceR': betaeR}, couplings.scale, 'derivative_above')
 
@@ -166,7 +167,7 @@ def run_scipy(couplings: ALPcouplings, beta: Callable[[ALPcouplings], ALPcouplin
     """
 
     def fun(t0, y):
-        return beta(ALPcouplings.fromarray(y, np.exp(t0), 'derivative_above')).toarray()/(16*np.pi**2)
+        return beta(ALPcouplings._fromarray(y, np.exp(t0), 'derivative_above'))._toarray()/(16*np.pi**2)
     
-    sol = solve_ivp(fun=fun, t_span=(np.log(couplings.scale), np.log(scale_out)), y0=couplings.translate('derivative_above').toarray())
-    return sol
+    sol = solve_ivp(fun=fun, t_span=(np.log(couplings.scale), np.log(scale_out)), y0=couplings.translate('derivative_above')._toarray())
+    return ALPcouplings._fromarray(sol.y[:,-1], scale_out, 'derivative_above')

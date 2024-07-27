@@ -3,6 +3,7 @@
 import numpy as np
 
 
+bases_above = ['derivative_above']
 class ALPcouplings:
     """Container for ALP couplings.
 
@@ -121,17 +122,40 @@ class ALPcouplings:
         else:
             raise ValueError('Unknown basis')
         
-    def toarray(self) -> np.ndarray:
+    def _toarray(self) -> np.ndarray:
         "Converts the object into a vector of coefficientes"
         if self.basis == 'derivative_above':
-            return np.hstack([np.asarray(self.values[c]).ravel() for c in ['cg', 'cB', 'cW', 'cqL', 'cuR', 'cdR', 'clL', 'ceR']])
+            return np.hstack([np.asarray(self.values[c]).ravel() for c in ['cqL', 'cuR', 'cdR', 'clL', 'ceR', 'cg', 'cB', 'cW']])
     
     @classmethod
-    def fromarray(cls, array: np.ndarray, scale: float, basis: str) -> 'ALPcouplings':
+    def _fromarray(cls, array: np.ndarray, scale: float, basis: str) -> 'ALPcouplings':
         if basis == 'derivative_above':
-            vals = {'cg': float(array[0]), "cB": float(array[1]), 'cW': float(array[2])}
+            vals = {}
             for i, c in enumerate(['cqL', 'cuR', 'cdR', 'clL', 'ceR']):
-                vals |= {c: array[3+9*i:3+9*(i+1)].reshape([3,3])}
+                vals |= {c: array[9*i:9*(i+1)].reshape([3,3])}
+            vals |= {'cg': float(array[45]), "cB": float(array[46]), 'cW': float(array[47])}
             return ALPcouplings(vals, scale, basis)
+        
+    def match_run(self, scale_out: float, basis: str, integrator: str='scipy', beta: str='ytop', matching_scale: float = 100.0) -> 'ALPcouplings':
+        from . import run_high 
+        if scale_out > self.scale:
+            raise ValueError("The final scale must be smaller than the initial scale.")
+        if scale_out == self.scale:
+            return self.translate(basis)
+        if scale_out < matching_scale:
+            raise NotImplemented
+        if basis in bases_above and self.basis in bases_above:
+            if beta == 'ytop':
+                betafunc = run_high.beta_ytop
+            else:
+                raise KeyError(beta)
+            if integrator == 'scipy':
+                return run_high.run_scipy(self, betafunc, scale_out)
+            if integrator == 'leadinglog':
+                return run_high.run_leadinglog(self, betafunc, scale_out)
+            else:
+                raise KeyError(integrator)
+        else:
+            raise KeyError(basis)
 
 
