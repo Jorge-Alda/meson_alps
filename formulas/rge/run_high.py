@@ -21,7 +21,6 @@ from . import ALPcouplings
 import wilson
 from typing import Callable
 from scipy.integrate import solve_ivp
-import vegas
 
 
 def gauge_tilde(couplings: ALPcouplings) -> dict:
@@ -130,6 +129,65 @@ def beta_ytop(couplings: ALPcouplings) -> ALPcouplings:
 
     return ALPcouplings({'cqL': betaqL, 'cuR': betauR, 'cdR': betadR, 'clL': betalL, 'ceR': betaeR}, couplings.scale, 'derivative_above')
 
+
+def beta_full(couplings: ALPcouplings) -> ALPcouplings:
+    """beta function for the ALP couplings, including the full Yukawa dependence
+    
+    Implements eq.(18) of 2012.12272
+
+    Parameters
+    ----------
+    couplings : ALPCouplings
+        An object containing the ALP couplings
+
+    Returns
+    -------
+    beta : ALPCouplings
+        An object containing the beta functions of the ALP couplings
+    """
+
+    tildes = gauge_tilde(couplings)
+    pars = sm_params(couplings.scale)
+    yu = np.matrix(pars['yu'])
+    yd = np.matrix(pars['yd'])
+    ye = np.matrix(pars['ye'])
+    alpha_s = pars['alpha_s']
+    alpha_1 = pars['alpha_1']
+    alpha_2 = pars['alpha_2']
+
+    # Field redefinitions of the fermionic fields that eliminate Ophi, see Eq.(5) of 2012.12272 and the discussion below
+    bu = -1
+    bd = 1
+    be = 1
+    bQ = 0
+    bL = 0
+
+    # eq(19)
+    couplings = couplings.translate('derivative_above')
+    X = np.trace(3* couplings['cqL'] @ (yu @ yu.H- yd @ yd.H)-3*couplings['cuR'] @ yu.H @ yu + 3* couplings['cdR'] @ yd.H @ yd - couplings['clL'] @ ye @ ye.H + couplings['ceR'] @ ye.H @ ye)
+
+    # Casimir
+    CF = lambda N: 0.5*(N**2-1)/N
+
+    # hypercharges
+    hyp_qL = 1/6
+    hyp_uR = 2/3
+    hyp_dR = -1/3
+    hyp_lL = -1/2
+    hyp_eR = -1
+
+    # eq(18)
+    betaqL = 0.5*(yu @ yu.H @ couplings['cqL'] + couplings['cqL'] @ yu @ yu.H + yd @ yd.H @ couplings['cqL'] + couplings['cqL'] @ yd @ yd.H) - (yu @ couplings['cuR'] @ yu.H + yd @ couplings['cdR'] @ yd.H) + np.eye(3) * (2*bQ*X - 12*alpha_s**2*CF(3)*tildes['cgtilde']- 12*alpha_2**2*CF(2)*tildes['cWtilde'] - 12*alpha_1**2*hyp_qL**2*tildes['cBtilde'])
+
+    betauR = yu.H @ yu @ couplings['cuR'] + couplings['cuR'] @ yu.H @ yu - 2* yu.H @ couplings['cqL'] @ yu + np.eye(3) * (2*bu*X + 12*alpha_s**2*CF(3)*tildes['cgtilde']+12*alpha_1**2*hyp_uR**2*tildes['cWtilde'])
+
+    betadR = yd.H @ yd @ couplings['cdR'] + couplings['cdR'] @ yd.H @ yd - 2* yd.H @ couplings['cqL'] @ yd + np.eye(3) * (2*bd*X + 12*alpha_s**2*CF(3)*tildes['cgtilde']+12*alpha_1**2*hyp_dR**2*tildes['cWtilde'])
+
+    betalL = 0.5*(ye @ ye.H @ couplings['clL'] + couplings['clL'] @ ye @ ye.H) - ye @ couplings['ceR'] @ ye.H + np.eye(3) * (2*bL*X - 12*alpha_2**2*CF(2)*tildes['cWtilde']-12*alpha_1**2*hyp_lL**2*tildes['cBtilde'])
+
+    betaeR = ye.H @ ye @ couplings['ceR'] + couplings['ceR'] @ ye.H @ ye - 2*ye.H @ couplings['clL'] @ ye + np.eye(3) * (2*be*X+12*alpha_1**2*hyp_eR**2*tildes['cBtilde'])
+
+    return ALPcouplings({'cqL': betaqL, 'cuR': betauR, 'cdR': betadR, 'clL': betalL, 'ceR': betaeR}, scale=couplings.scale, basis='derivative_above')
 
 def run_leadinglog(couplings: ALPcouplings, beta: Callable[[ALPcouplings], ALPcouplings], scale_out: float) -> ALPcouplings:
     """Obtain the ALP couplings at a different scale using the leading log approximation
