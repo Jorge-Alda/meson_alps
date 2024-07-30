@@ -32,9 +32,10 @@ def runSM(scale):
         'yu': np.matrix(wSM['Gu']),
         'yd': np.matrix(wSM['Gd']),
         'ye': np.matrix(wSM['Ge']),
-        'alpha_s': wSM['gs']**2/(4*np.pi),
-        'alpha_1': wSM['gp']**2/(4*np.pi),
-        'alpha_2': wSM['g']**2/(4*np.pi),
-        's2w': wSM['gp']**2/(wSM['g']**2+wSM['gp']**2),
-        'CKM': Vckm
+        'alpha_s': np.real(wSM['gs']**2/(4*np.pi)),
+        'alpha_1': np.real(wSM['gp']**2/(4*np.pi)),
+        'alpha_2': np.real(wSM['g']**2/(4*np.pi)),
+        'alpha_em': np.real(wSM['g']**2*wSM['gp']**2/(wSM['g']**2+wSM['gp']**2))/(4*np.pi),
+        's2w': np.real(wSM['gp']**2/(wSM['g']**2+wSM['gp']**2)),
+        'CKM': np.matrix(Vckm)
     }
