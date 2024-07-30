@@ -17,7 +17,7 @@ Running
 """
 
 import numpy as np
-from . import ALPcouplings
+from . import ALPcouplings, runSM
 import wilson
 from typing import Callable
 from scipy.integrate import solve_ivp
@@ -45,31 +45,6 @@ def gauge_tilde(couplings: ALPcouplings) -> dict:
     return {'cgtilde': cg, 'cBtilde':cB, 'cWtilde': cW}
 
 
-def sm_params(scale: float) -> dict:
-    """SM parameters at an energy scale
-    
-    Parameters
-    ----------
-    scale : float
-        Energy scale, in GeV
-
-    Returns
-    -------
-    pars : dict
-        dict containing the Yukawa matrices `yu`, `yd` and `ye`, and the gauge couplings `alpha_s`, `alpha_1` and `alpha_2`
-    """
-
-    wSM = wilson.classes.SMEFT(wilson.wcxf.WC('SMEFT', 'Warsaw', scale, {})).C_in # For the moment we reuse wilson's code for the SM case, i.e, with all Wilson coefficients set to zero. Maybe at some point we should implement our own version.
-    return {
-        'yu': np.matrix(wSM['Gu']),
-        'yd': np.matrix(wSM['Gd']),
-        'ye': np.matrix(wSM['Ge']),
-        'alpha_s': wSM['gs']**2/(4*np.pi),
-        'alpha_1': wSM['gp']**2/(4*np.pi),
-        'alpha_2': wSM['g']**2/(4*np.pi)
-    }
-
-
 def beta_ytop(couplings: ALPcouplings) -> ALPcouplings:
     """beta function for the ALP couplings, neglecting all Yukawas except y_top
     
@@ -87,7 +62,7 @@ def beta_ytop(couplings: ALPcouplings) -> ALPcouplings:
     """
 
     tildes = gauge_tilde(couplings)
-    pars = sm_params(couplings.scale)
+    pars = runSM(couplings.scale)
     ytop = np.real(pars['yu'][2,2])
     alpha_s = pars['alpha_s']
     alpha_1 = pars['alpha_1']
@@ -147,7 +122,7 @@ def beta_full(couplings: ALPcouplings) -> ALPcouplings:
     """
 
     tildes = gauge_tilde(couplings)
-    pars = sm_params(couplings.scale)
+    pars = runSM(couplings.scale)
     yu = np.matrix(pars['yu'])
     yd = np.matrix(pars['yd'])
     ye = np.matrix(pars['ye'])
