@@ -29,8 +29,8 @@ def runSM(scale):
     Vckm = ckmutil.ckm.ckm_tree(Vus, Vub, Vcb, gamma)
 
     return {
-        'yu': np.matrix(wSM['Gu']),
-        'yd': np.matrix(wSM['Gd']),
+        'yu': np.matrix(UuL).H @ np.matrix(wSM['Gu']),
+        'yd': np.matrix(UuL).H @ np.matrix(wSM['Gd']),
         'ye': np.matrix(wSM['Ge']),
         'alpha_s': np.real(wSM['gs']**2/(4*np.pi)),
         'alpha_1': np.real(wSM['gp']**2/(4*np.pi)),
