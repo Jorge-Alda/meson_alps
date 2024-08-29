@@ -197,7 +197,7 @@ class ALPcouplings:
             return ALPcouplings(vals, scale, basis)
         
     def match_run(self, scale_out: float, basis: str, integrator: str='scipy', beta: str='full', matching_scale: float = 100.0, match_2loops = False) -> 'ALPcouplings':
-        from . import run_high, matching
+        from . import run_high, matching, run_low
         if scale_out > self.scale:
             raise ValueError("The final scale must be smaller than the initial scale.")
         if scale_out == self.scale:
@@ -205,11 +205,16 @@ class ALPcouplings:
         if self.scale > matching_scale and scale_out < matching_scale:
             if self.basis in bases_above and basis in bases_below:
                 couplings_ew = self.match_run(matching_scale, 'massbasis_above', integrator, beta)
-                return matching.match(couplings_ew, match_2loops).translate(basis)
+                return matching.match(couplings_ew, match_2loops).translate(basis).match_run(scale_out, basis, integrator)
             else:
                 raise KeyError(basis)
         if scale_out < matching_scale:
-            raise NotImplemented
+            if integrator == 'scipy':
+                return run_low.run_scipy(self, scale_out).translate(basis)
+            if integrator == 'leadinglog':
+                return run_low.run_leadinglog(self, scale_out).translate(basis)
+            else:
+                raise KeyError(integrator)
         if basis in bases_above and self.basis in bases_above:
             if beta == 'ytop':
                 betafunc = run_high.beta_ytop
