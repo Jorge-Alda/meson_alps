@@ -31,14 +31,14 @@ def match_FCNC(couplings: ALPcouplings, two_loops = False) -> np.matrix:
         cW = couplings['cW']
 
     xt = mtop**2/mW**2
-    Vtop = np.einsum('ia,bj->ijab', Vckm.H, Vckm)[:,:,2,2]
+    Vtop = np.einsum('ia,bj->ijab', Vckm.H, Vckm)[:,:,2,2]  # V_{ti}^* V_{tj}
     gx = (1-xt+np.log(xt))/(1-xt)**2
     logm = np.log(couplings.scale**2/mtop**2)
     kFCNC = 0
     kFCNC += (np.einsum('im,nj,mn->ijm', Vckm.H, Vckm, couplings['kU'])[:,:,2] + np.einsum('im,nj,mn->ijn', Vckm.H, Vckm, couplings['kU'])[:,:,2]) * (-0.25*logm-0.375+0.75*gx)
     kFCNC += Vtop*couplings['kU'][2,2]
     kFCNC += Vtop*couplings['ku'][2,2]*(0.5*logm-0.25-1.5*gx)
-    kFCNC -= 1.5*alpha_em/np.pi/s2w * cW * Vtop * gx
+    kFCNC -= 1.5*alpha_em/np.pi/s2w * cW * Vtop * (1-xt+xt*np.log(xt))/(1-xt)**2
     return yt**2/(16*np.pi**2) * kFCNC
 
 def match(couplings: ALPcouplings, two_loops = False) -> ALPcouplings:
